@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  app:
+    container_name: go-app
+    build:
+      context: .
+      # Remote Containerが立ち上がるまで待機
+      dockerfile: docker/golang/Dockerfile.dev
+    ports:
+      - 8088:8088
+    volumes:
+      - ./app:/go/src/app:cached
+    command: /bin/ash -c "while sleep 1000; do :; done"
+    depends_on:
+      - mysql
+    links:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - "./mysql:/var/lib/mysql"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+    ports:
+      - 3306:3306
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=password
+    links:
+      - mysql
+    ports:
+      - 8080:80
+    volumes:
+      - /sessions
